@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>pages/components/FilterBar.qml</file>
+        <file>pages/components/RestaurantCard.qml</file>
+        <file>pages/components/SearchBar.qml</file>
+        <file>pages/FavoritesView.qml</file>
+        <file>pages/HomeView.qml</file>
+        <file>pages/LoginView.qml</file>
+        <file>pages/MapView.qml</file>
+        <file>pages/ProfileView.qml</file>
+        <file>pages/RegisterView.qml</file>
+        <file>pages/RestaurantDetail.qml</file>
+        <file>pages/RestaurantListView.qml</file>
+        <file>assets/icons/back.svg</file>
+        <file>assets/icons/explore.svg</file>
+        <file>assets/icons/favorite.svg</file>
+        <file>assets/icons/person.svg</file>
+        <file>assets/icons/restaurant.svg</file>
+        <file>assets/icons/settings.svg</file>
+        <file>assets/icons/vegan.svg</file>
+        <file>assets/icons/vegetarian.svg</file>
+    </qresource>
+</RCC>
