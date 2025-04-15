@@ -1,5 +1,6 @@
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, Table
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, Table, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime
 from database import Base
 
 # Association table for user favorites
@@ -15,7 +16,10 @@ class User(Base):
 
     id = Column(String, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
+    name = Column(String)
     email = Column(String, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     # Relationship to restaurants
     favorites = relationship("Restaurant", secondary=user_favorites, back_populates="favorited_by")

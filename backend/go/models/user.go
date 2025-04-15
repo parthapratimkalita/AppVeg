@@ -18,6 +18,7 @@ var db *sql.DB
 type User struct {
 	ID        string    `json:"id"`
 	Username  string    `json:"username"`
+	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"` // Never returned in JSON
 	CreatedAt time.Time `json:"created_at"`
@@ -28,6 +29,7 @@ type User struct {
 type UserResponse struct {
 	ID        string    `json:"id"`
 	Username  string    `json:"username"`
+	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
 }
@@ -56,6 +58,7 @@ func InitDB() error {
 	CREATE TABLE IF NOT EXISTS users (
 		id TEXT PRIMARY KEY,
 		username TEXT UNIQUE NOT NULL,
+		name TEXT NOT NULL,
 		email TEXT UNIQUE NOT NULL,
 		password TEXT NOT NULL,
 		created_at DATETIME NOT NULL,
@@ -72,7 +75,7 @@ func InitDB() error {
 }
 
 // CreateUser creates a new user in the database
-func CreateUser(username, email, password string) (*User, error) {
+func CreateUser(username, name, email, password string) (*User, error) {
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -87,6 +90,7 @@ func CreateUser(username, email, password string) (*User, error) {
 	user := &User{
 		ID:        userID,
 		Username:  username,
+		Name:      name,
 		Email:     email,
 		Password:  string(hashedPassword),
 		CreatedAt: now,
@@ -95,10 +99,10 @@ func CreateUser(username, email, password string) (*User, error) {
 
 	// Insert into database
 	query := `
-	INSERT INTO users (id, username, email, password, created_at, updated_at) 
-	VALUES (?, ?, ?, ?, ?, ?)`
+	INSERT INTO users (id, username, name, email, password, created_at, updated_at) 
+	VALUES (?, ?, ?, ?, ?, ?, ?)`
 
-	_, err = db.Exec(query, user.ID, user.Username, user.Email, user.Password, user.CreatedAt, user.UpdatedAt)
+	_, err = db.Exec(query, user.ID, user.Username, user.Name, user.Email, user.Password, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -108,11 +112,11 @@ func CreateUser(username, email, password string) (*User, error) {
 
 // GetUserByUsername retrieves a user by username
 func GetUserByUsername(username string) (*User, error) {
-	query := `SELECT id, username, email, password, created_at, updated_at FROM users WHERE username = ?`
+	query := `SELECT id, username, name, email, password, created_at, updated_at FROM users WHERE username = ?`
 	row := db.QueryRow(query, username)
 
 	user := &User{}
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.Username, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("user not found")
@@ -125,11 +129,11 @@ func GetUserByUsername(username string) (*User, error) {
 
 // GetUserByID retrieves a user by ID
 func GetUserByID(id string) (*User, error) {
-	query := `SELECT id, username, email, password, created_at, updated_at FROM users WHERE id = ?`
+	query := `SELECT id, username, name, email, password, created_at, updated_at FROM users WHERE id = ?`
 	row := db.QueryRow(query, id)
 
 	user := &User{}
-	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.Username, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("user not found")
@@ -164,6 +168,7 @@ func (u *User) ToUserResponse() UserResponse {
 	return UserResponse{
 		ID:        u.ID,
 		Username:  u.Username,
+		Name:      u.Name,
 		Email:     u.Email,
 		CreatedAt: u.CreatedAt,
 	}

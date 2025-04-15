@@ -34,7 +34,8 @@ type LoginRequest struct {
 
 // RegisterRequest represents the request body for registration
 type RegisterRequest struct {
-	Username string `json:"username" binding:"required"`
+	Username string `json:"username" binding:"required"`  // This will be the email
+	Name     string `json:"name" binding:"required"`      // This is the display name
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
 }
@@ -43,7 +44,8 @@ type RegisterRequest struct {
 type TokenResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
-	Username    string `json:"username"`
+	Username    string `json:"username"`  // This is the email
+	Name        string `json:"name"`      // This is the display name
 	UserID      string `json:"user_id"`
 }
 
@@ -55,15 +57,15 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// Check if user exists
-	_, err := models.GetUserByUsername(req.Username)
+	// Check if user exists by email (which is used as username)
+	_, err := models.GetUserByUsername(req.Email)
 	if err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username already exists"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered"})
 		return
 	}
 
-	// Create user
-	user, err := models.CreateUser(req.Username, req.Email, req.Password)
+	// Create user with email as username and provided name
+	user, err := models.CreateUser(req.Email, req.Name, req.Email, req.Password)
 	if err != nil {
 		log.Printf("Error creating user: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
@@ -85,7 +87,16 @@ func Register(c *gin.Context) {
 		// Don't fail registration if sync fails
 	}
 
-	c.JSON(http.StatusCreated, user.ToUserResponse())
+	// Return user data with token
+	userResponse := user.ToUserResponse()
+	c.JSON(http.StatusOK, gin.H{
+		"id": userResponse.ID,
+		"username": userResponse.Username,
+		"name": userResponse.Name,
+		"email": userResponse.Email,
+		"created_at": userResponse.CreatedAt,
+		"token": token,
+	})
 }
 
 // Login handles user authentication
@@ -96,7 +107,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Get user
+	// Get user by email (which is used as username)
 	user, err := models.GetUserByUsername(req.Username)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
@@ -120,7 +131,8 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, TokenResponse{
 		AccessToken: token,
 		TokenType:   "Bearer",
-		Username:    user.Username,
+		Username:    user.Username,  // Return the email
+		Name:        user.Name,      // Return the display name
 		UserID:      user.ID,
 	})
 }
@@ -181,8 +193,9 @@ func generateJWT(user *models.User) (string, error) {
 	// Create claims
 	claims := jwt.MapClaims{
 		"user_id":  user.ID,
-		"username": user.Username,
-		"email":    user.Email,
+		"username": user.Username,  // This is the email
+		"name":     user.Name,      // This is the display name
+		"email":    user.Email,     // This is the email
 		"exp":      expirationTime.Unix(),
 	}
 

@@ -64,6 +64,7 @@ func JWTAuth() gin.HandlerFunc {
 			// Add user info to context
 			c.Set("user_id", claims["user_id"])
 			c.Set("username", claims["username"])
+			c.Set("name", claims["name"])
 			c.Next()
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
